@@ -16,53 +16,53 @@ app.use(bodyParser())
 app.use(router.routes())
 
 function request() {
-	return supertest(app.listen())
+  return supertest(app.listen())
 }
 
 const lock1 = lock({
-	redisClient: redis,
-	expireMilliseconds: 1000, // keep 1 sec
-	onLocked: async (ctx, next) => {
-		ctx.status = 400
-		ctx.body = 'fail'
-	},
-	keyGenerator: ctx => {
-		console.log('-----', ctx.path)
-		return `testPrefix:${ctx.path}:${JSON.stringify(ctx.params)}`
-	}
+  redisClient: redis,
+  expireMilliseconds: 1000, // keep 1 sec
+  onLocked: async (ctx, next) => {
+    ctx.status = 400
+    ctx.body = 'fail'
+  },
+  keyGenerator: ctx => {
+    console.log('-----', ctx.path)
+    return `testPrefix:${ctx.path}:${JSON.stringify(ctx.params)}`
+  }
 })
 
 router.all('/:id', lock1, ctx => {
-	return Promise.delay(100) // cost 0.1 sec
-		.then(() => {
-			ctx.body = 'succeed'
-		})
+  return Promise.delay(100) // cost 0.1 sec
+    .then(() => {
+      ctx.body = 'succeed'
+    })
 })
 
 parallel('params different', function () {
-	it('1st', function (done) {
-		request()
-			.post('/1')
-			.expect(200, 'succeed', done)
-	})
+  it('1st', function (done) {
+    request()
+      .post('/1')
+      .expect(200, 'succeed', done)
+  })
 
-	it('should pass', function (done) {
-		request()
-			.post('/2')
-			.expect(200, 'succeed', done)
-	})
+  it('should pass', function (done) {
+    request()
+      .post('/2')
+      .expect(200, 'succeed', done)
+  })
 
-	it('should block', function (done) {
-		request()
-			.post('/1?param=1')
-			.expect(400, 'fail', done)
-	})
+  it('should block', function (done) {
+    request()
+      .post('/1?param=1')
+      .expect(400, 'fail', done)
+  })
 
-	it('should block', function (done) {
-		request()
-			.post('/1')
-			.send({name: 'steve'})
-			.expect(400, 'fail', done)
-	})
+  it('should block', function (done) {
+    request()
+      .post('/1')
+      .send({name: 'steve'})
+      .expect(400, 'fail', done)
+  })
 })
 
