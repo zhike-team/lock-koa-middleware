@@ -36,17 +36,17 @@ module.exports = (options) => {
     }
   }
 
-  let onLocked = async (ctx, next) => {
+  let onAcquireFail = async (ctx, next) => {
     let err = new Error('Locked, try later');
     err.status = 429;
     throw err;
   }
-  if (options.onLocked) {
-    if (typeof options.onLocked === 'function') {
-      onLocked = options.onLocked;
+  if (options.onAcquireFail) {
+    if (typeof options.onAcquireFail === 'function') {
+      onAcquireFail = options.onAcquireFail;
     }
     else {
-      throw new Error('options.onLocked must be a function which handles response when resource is locked');
+      throw new Error('options.onAcquireFail must be a function which handles response when resource is locked');
     }
   }
 
@@ -63,16 +63,15 @@ module.exports = (options) => {
     const redisValue = Math.random();
 
     try {
-      let success = await lock(redisKey, redisValue, timeout);
-      if(!success){
-        await onLocked(ctx, next);
+      let ok = await lock(redisKey, redisValue, timeout);
+      if(ok){ // ok === 'OK'
+				await next();
       }
       else{
-        await next();
-        await unlock(redisKey, redisValue);
+				await onAcquireFail(ctx, next);
       }
     }
-    catch (e) {
+    finally {
       await unlock(redisKey, redisValue);
     }
   }

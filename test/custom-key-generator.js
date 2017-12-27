@@ -22,7 +22,7 @@ function request() {
 const lock1 = lock({
   redisClient: redis,
   expireMilliseconds: 1000, // keep 1 sec
-  onLocked: async (ctx, next) => {
+  onAcquireFail: async (ctx, next) => {
     ctx.status = 400
     ctx.body = 'fail'
   },
