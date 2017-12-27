@@ -17,13 +17,13 @@ module.exports = (options) => {
   }
 
   let keyFn = ctx => {
-    let params = Object.assign({}, ctx.query, ctx.request.body, ctx.params);
-    let sortedKeys = Object.keys(params).sort();
-    let sortedParams = {};
-    for(let key of sortedKeys){
-      sortedParams[key] = params[key];
-    }
-    const md5 = crypto.createHash('md5').update(JSON.stringify(sortedParams)).digest('hex');
+    let params = {
+      query: ctx.query,
+      body: ctx.request.body,
+      params: ctx.params
+    };
+
+    const md5 = crypto.createHash('md5').update(JSON.stringify(params)).digest('hex');
 
     return `lock-koa-middleware:${ctx.path.replace(/\/$/, '')}:${md5}`;
   }
