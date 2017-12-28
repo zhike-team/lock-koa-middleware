@@ -65,10 +65,10 @@ module.exports = (options) => {
     try {
       let ok = await lock(redisKey, redisValue, timeout);
       if(ok){ // ok === 'OK'
-				await next();
+        await next();
       }
       else{
-				await onAcquireFail(ctx, next);
+        await onAcquireFail(ctx, next);
       }
     }
     finally {
